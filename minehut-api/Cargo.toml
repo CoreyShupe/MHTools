@@ -1,0 +1,12 @@
+[package]
+name = "minehut_api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.*"
+log = "0.4.17"
+reqwest = "0.*"
+serde = "1.*"
+serde_derive = "1.*"
+serde_json = "1.*"

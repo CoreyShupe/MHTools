@@ -1,0 +1,14 @@
+[package]
+name = "minehut_tracker_bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.57"
+chrono = "0.4.19"
+fern = "0.6.1"
+log = "0.4.17"
+minehut_api = { path = "../minehut-api", version = "0.1.0" }
+tokio = { version = "1.18.2", features = ["full"] }
