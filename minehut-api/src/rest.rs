@@ -26,8 +26,8 @@ impl Call {
     }
 }
 
-macro_rules! call {
-    (GET $function:ident AS $response:ty = $url:literal) => {
+macro_rules! get {
+    ($function:ident,$response:ty,$url:literal) => {
         pub async fn $function() -> anyhow::Result<$response> {
             Call::new($url)
                 .get::<$response>()
@@ -45,4 +45,5 @@ pub struct NetworkSimpleStatsResponse {
     pub ram_max: usize,
 }
 
-call!(GET get_simple_stats AS NetworkSimpleStatsResponse = "/network/simple_stats");
+get!(get_simple_stats, NetworkSimpleStatsResponse, "/network/simple_stats");
+
