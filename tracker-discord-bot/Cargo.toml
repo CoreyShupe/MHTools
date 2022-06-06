@@ -11,4 +11,27 @@ chrono = "0.4.19"
 fern = "0.6.1"
 log = "0.4.17"
 minehut_api = { path = "../minehut-api", version = "0.1.0" }
-tokio = { version = "1.18.2", features = ["full"] }
+serde = "1.0.137"
+serde_derive = "1.0.137"
+serde_json = "1.0.81"
+tokio = { version = "1.18.2", features = ["full", "time"] }
+flume = "0.10.12"
+
+[dependencies.serenity]
+git = "https://github.com/serenity-rs/serenity"
+version = "0.11"
+default-features = false
+features = [
+    "builder",
+    "cache",
+    "client",
+    "gateway",
+    "http",
+    "model",
+    "utils",
+    "rustls_backend"
+]
+
+[dependencies.mc_protocol]
+git = "https://github.com/CoreyShupe/MCProtocol.rs"
+version = "0.1"

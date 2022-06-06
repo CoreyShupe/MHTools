@@ -2,3 +2,4 @@ target/
 *.iml
 .idea/
 Cargo.lock
+/tracker-discord-bot/etc/config.json
