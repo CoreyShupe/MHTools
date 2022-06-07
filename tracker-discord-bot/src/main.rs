@@ -2,6 +2,7 @@ mod collectors;
 mod commands;
 mod event_handler;
 mod reporters;
+mod minecraft_bot;
 
 use crate::event_handler::{CommandHandlerKey, CommandHandlers};
 use anyhow::Context;
@@ -92,7 +93,7 @@ async fn main() -> anyhow::Result<()> {
     drop(data_write_lock);
 
     if let Err(err) = client.start().await {
-        println!("Client error: {:?}", err);
+        log::error!("Client error: {:?}", err);
     }
     Ok(())
 }

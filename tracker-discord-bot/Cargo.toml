@@ -14,7 +14,7 @@ minehut_api = { path = "../minehut-api", version = "0.1.0" }
 serde = "1.0.137"
 serde_derive = "1.0.137"
 serde_json = "1.0.81"
-tokio = { version = "1.18.2", features = ["full", "time"] }
+tokio = { version = "1.18.2", features = ["full", "time", "tracing"] }
 flume = "0.10.12"
 
 [dependencies.serenity]

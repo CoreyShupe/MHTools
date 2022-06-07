@@ -67,9 +67,12 @@ pub async fn setup(type_map: Arc<RwLock<TypeMap>>, cache_and_http: (Arc<Cache>, 
 
                 _Time since last update_: `{} seconds`
 
+                _Time since last embed update_: <t:{}:R>
+
                 _Successful Operations_: `({}/{POLL_PERIOD_SIZE})`
                 "#,
                 last_poll_time.elapsed().as_secs(),
+                crate::minecraft_bot::get_system_time_as_millis() / 1000,
                 sheet.successful_calls
             );
 
