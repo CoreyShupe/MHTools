@@ -1,13 +1,12 @@
-use std::io::Cursor;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use mc_protocol::ext::write_packet;
 use mc_protocol::packets::client_bound::status::{JSONResponse, Pong, StatusResponse};
 use mc_protocol::packets::packet_async::ProtocolSheet;
-use mc_protocol::{MinecraftPacketBuffer, PacketToCursor, ProtocolVersion, wrap_async_packet_handle};
 use mc_protocol::packets::server_bound::handshaking::{Handshake, NextState, ServerAddress};
 use mc_protocol::packets::server_bound::status::{Ping, StatusRequest};
+use mc_protocol::{wrap_async_packet_handle, MinecraftPacketBuffer, ProtocolVersion};
+use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::net::tcp::OwnedWriteHalf;
-use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
 
@@ -23,16 +22,6 @@ pub async fn request_status<S: ToString>(
     port: u16,
     protocol_version: ProtocolVersion,
 ) -> anyhow::Result<(StatusResponse, u128)> {
-    fn packet_to_vec<T: PacketToCursor>(protocol: ProtocolVersion, packet: T) -> anyhow::Result<Vec<u8>> {
-        packet.to_cursor(protocol, None, None).map(Cursor::into_inner)
-    }
-
-    async fn write_packet<T: PacketToCursor + std::fmt::Debug>(protocol: ProtocolVersion, packet: T, write_half: &mut OwnedWriteHalf) -> anyhow::Result<()> {
-        let bytes = packet_to_vec(protocol, packet)?;
-        use anyhow::Context;
-        write_half.write(bytes.as_slice()).await.map(|_| ()).context("Failed to write packet.")
-    }
-
     struct Context {
         response: Option<StatusResponse>,
         pong: Option<Pong>,
@@ -43,9 +32,11 @@ pub async fn request_status<S: ToString>(
         fn handle_status_response<Context, StatusResponse>(sheet, context, status) {
             let mut context_write_lock = context.write().await;
             context_write_lock.response = Some(status);
-            write_packet(sheet.read().await.protocol_version, Ping {
-                payload: get_system_time_as_millis() as i64
-            }, &mut context_write_lock.write_half).await?;
+            write_packet(
+                Ping { payload: get_system_time_as_millis() as i64},
+                sheet.read().await.protocol_version,
+                &mut context_write_lock.write_half
+            ).await?;
         }
 
         fn handle_pong_response<Context, Pong>(_sheet, context, pong) {
@@ -63,13 +54,18 @@ pub async fn request_status<S: ToString>(
 
     let (mut read_half, mut write_half) = stream.into_split();
 
-    write_packet(ProtocolVersion::Handshake, Handshake {
-        protocol_version: protocol_version.to_spec().0.into(),
-        server_address: ServerAddress::from(address.to_string()),
-        server_port: port,
-        next_state: (1i32.into(), NextState::Status {}),
-    }, &mut write_half).await?;
-    write_packet(protocol_version, StatusRequest {}, &mut write_half).await?;
+    write_packet(
+        Handshake {
+            protocol_version: protocol_version.to_spec().0.into(),
+            server_address: ServerAddress::from(address.to_string()),
+            server_port: port,
+            next_state: (1i32.into(), NextState::Status {}),
+        },
+        ProtocolVersion::Handshake,
+        &mut write_half,
+    )
+        .await?;
+    write_packet(StatusRequest {}, protocol_version, &mut write_half).await?;
 
     let context = Context {
         response: None,
@@ -86,7 +82,8 @@ pub async fn request_status<S: ToString>(
             Arc::clone(&locked_sheet),
             Arc::clone(&locked_context),
             buffer.packet_reader()?,
-        ).await?;
+        )
+            .await?;
 
         let read_context = RwLock::read(&locked_context).await;
         if let (Some(_), Some(__)) = (&read_context.response, &read_context.pong) {
@@ -95,7 +92,16 @@ pub async fn request_status<S: ToString>(
     }
 
     let context = locked_context.read().await;
-    Ok((StatusResponse {
-        json_response: JSONResponse::from(context.response.as_ref().map(|res| String::from(&res.json_response)).unwrap()),
-    }, get_system_time_as_millis() - (context.pong.as_ref().unwrap().payload as u128)))
+    Ok((
+        StatusResponse {
+            json_response: JSONResponse::from(
+                context
+                    .response
+                    .as_ref()
+                    .map(|res| String::from(&res.json_response))
+                    .unwrap(),
+            ),
+        },
+        get_system_time_as_millis() - (context.pong.as_ref().unwrap().payload as u128),
+    ))
 }

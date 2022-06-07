@@ -27,11 +27,12 @@ pub struct MinecraftStats {
 }
 
 pub async fn query_minecraft_status() -> anyhow::Result<MinecraftStats> {
-    let bot_response = crate::minecraft_bot::request_status(TARGET_IP, TARGET_PORT, NATIVE_PROTOCOL_VERSION).await?;
+    let bot_response =
+        crate::minecraft_bot::request_status(TARGET_IP, TARGET_PORT, NATIVE_PROTOCOL_VERSION)
+            .await?;
     log::info!("Got response!");
-    let full_res = serde_json::from_str::<StatusResponseFull>(
-        bot_response.0.json_response.as_ref(),
-    )?;
+    let full_res =
+        serde_json::from_str::<StatusResponseFull>(bot_response.0.json_response.as_ref())?;
     return Ok(MinecraftStats {
         latency: bot_response.1,
         players: full_res.breakdown.players,
@@ -47,7 +48,7 @@ crate::reporter!(Option<MinecraftStats>, "MinecraftStats", |self| {
                 Err(err) => {
                     log::error!("Error calling minecraft status {err:?}");
                     None
-                },
+                }
             })
             .await;
             // poll every half second

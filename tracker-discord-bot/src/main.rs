@@ -1,8 +1,8 @@
 mod collectors;
 mod commands;
 mod event_handler;
-mod reporters;
 mod minecraft_bot;
+mod reporters;
 
 use crate::event_handler::{CommandHandlerKey, CommandHandlers};
 use anyhow::Context;
