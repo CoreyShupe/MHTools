@@ -59,7 +59,7 @@ pub trait Reporter<T: Send> {
     {
         if let Some(sender) = self.sender() {
             Box::pin(async move {
-                log::error!(target: &*format!("{}/Reporter", Self::NAME), "Emitting item: {item:?}");
+                log::info!(target: &*format!("{}/Reporter", Self::NAME), "Emitting item: {item:?}");
                 if let Err(err) = sender.send_async(item).await {
                     log::error!(target: &*format!("{}/Reporter", Self::NAME), "Error emitting stats: {:?}", err);
                 } else {

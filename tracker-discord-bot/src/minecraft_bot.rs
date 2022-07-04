@@ -86,22 +86,17 @@ pub async fn request_status<S: ToString>(
             .await?;
 
         let read_context = RwLock::read(&locked_context).await;
-        if let (Some(_), Some(__)) = (&read_context.response, &read_context.pong) {
-            break;
+        if let (Some(response), Some(pong)) = (&read_context.response, &read_context.pong) {
+            return Ok((
+                StatusResponse {
+                    json_response: JSONResponse::from(
+                        String::from(&response.json_response)
+                    ),
+                },
+                get_system_time_as_millis() - (pong.payload as u128),
+            ));
         }
     }
 
-    let context = locked_context.read().await;
-    Ok((
-        StatusResponse {
-            json_response: JSONResponse::from(
-                context
-                    .response
-                    .as_ref()
-                    .map(|res| String::from(&res.json_response))
-                    .unwrap(),
-            ),
-        },
-        get_system_time_as_millis() - (context.pong.as_ref().unwrap().payload as u128),
-    ))
+    anyhow::bail!("Failed to query status.")
 }
